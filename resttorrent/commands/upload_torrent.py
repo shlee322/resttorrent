@@ -1,8 +1,10 @@
+import os
 import libtorrent
 from resttorrent.decorators import command
 from resttorrent.modules.torrent import get_session_raw, get_session, get_torrent_info
 from resttorrent.exceptions import APIException
 
+ROOT_DIR = os.path.normpath(os.environ.get('RESTTORRENT_ROOT_DIR', '/') + '/')
 
 @command('1', '/sessions/<session_id>/torrents', method='POST')
 def upload_torrent(session_id, save_path,
@@ -24,6 +26,10 @@ def upload_torrent(session_id, save_path,
         info = libtorrent.torrent_info(magnet)
     else:
         raise APIException('upload.notsupported')
+
+    save_path = os.path.normpath(os.path.join(ROOT_DIR, save_path))
+    if not save_path.startswith(ROOT_DIR):
+        raise APIException('access denied')
 
     params = {
         'save_path': save_path,
