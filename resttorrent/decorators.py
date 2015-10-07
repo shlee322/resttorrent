@@ -1,5 +1,6 @@
+import json
 from functools import wraps
-from flask import jsonify, request
+from flask import request
 from resttorrent.app import app
 from resttorrent.exceptions import APIException
 
@@ -42,15 +43,26 @@ def command(version, url, method='GET', command_name=None):
                 result = f(**new_kwargs)
                 if not result.get('status'):
                     result['status'] = 'success'
-                return jsonify(result)
+                result = json.dumps(result)
             except APIException, e:
-                return jsonify({
+                result = json.dumps({
                     'status': 'fail',
                     'error': {
                         'code': e.error_code,
                         'message': e.message
                     }
                 })
+
+            mime_type = 'application/json'
+            callback = request.args.get('callback', False)
+            if callback:
+                # if jsonp
+                result = str(callback) + '(' + result + ')'
+                mime_type = 'application/javascript'
+
+            resp = app.response_class(result, mimetype=mime_type)
+            resp.headers['Access-Control-Allow-Origin'] = '*'
+            return resp
 
         app.add_url_rule('/v%s%s' % (version, url), name, flask_command, methods=[method])
 

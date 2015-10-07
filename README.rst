@@ -60,6 +60,10 @@ Usage
 
        POST /v1/sessions
 
+    JSONP parameter name : callback
+    
+    CORS(Access-Control-Allow-Origin) Header : *
+
   - Socket.IO
 
     .. code-block:: javascript
